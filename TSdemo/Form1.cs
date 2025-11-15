@@ -18,8 +18,7 @@ namespace TSdemo
     public partial class Form1 : Form
     {
         private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(30) };
-        private DiagnosticWriter? _diag;
-        private TextBox? txtBoxDiag; // <-- Add this field
+        private TextBox? txtBoxDiag; // keep this field
 
         public Form1()
         {
@@ -31,17 +30,26 @@ namespace TSdemo
             FormClosed += Form1_FormClosed;
         }
 
+        // Thread-safe append helper (add inside Form1)
+        private void AppendDiag(string text)
+        {
+            if (txtBoxDiag == null || txtBoxDiag.IsDisposed) return;
+            if (txtBoxDiag.InvokeRequired)
+                txtBoxDiag.BeginInvoke(new Action(() => txtBoxDiag.AppendText(text)));
+            else
+                txtBoxDiag.AppendText(text);
+        }
+
         private void Form1_Shown(object? sender, EventArgs e)
         {
-            // ensure controls/handles are created and visible
             txtBoxDiag = FindControlRecursive(this, "txtBoxDiag") as TextBox;
-            _diag = txtBoxDiag != null ? new DiagnosticWriter(txtBoxDiag) : null;
 
             if (txtBoxDiag != null)
-                txtBoxDiag.AppendText("txtBoxDiag found and initialized\r\n");
-            _diag?.WriteLine("DiagnosticWriter created");
-
-            this.textBoxDiag.Text = "Ready.\r\n";
+            {
+                AppendDiag("txtBoxDiag found and initialized\r\n");
+                AppendDiag("DiagnosticWriter removed; using AppendDiag helper\r\n");
+                txtBoxDiag.Text = "Ready.\r\n";
+            }
         }
 
         private void Form1_FormClosed(object? sender, FormClosedEventArgs e) => _http.Dispose();
