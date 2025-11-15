@@ -34,7 +34,7 @@ namespace TSdemo
             // write a simple ready message into the designer textbox if present
             if (this.textBoxDiag != null && !this.textBoxDiag.IsDisposed)
             {
-                this.textBoxDiag.Text = "Ready.\r\n";
+                this.textBoxDiag.Text += "Ready.";
             }
         }
 
@@ -56,7 +56,9 @@ namespace TSdemo
                 }
                 else
                 {
-                    MessageBox.Show("DB_CONNECTION_STRING1 is   " + connStr, "Configuration", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    // //MessageBox.Show("DB_CONNECTION_STRING1 is   " + connStr, "Configuration", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    this.textBoxDiag.Text += "\r\n";
+                    this.textBoxDiag.Text += "DB_CONNECTION_STRING1 is   " + connStr;
                 }
 
                 // DEV WORKAROUND for untrusted SQL cert (only for dev). Remove for production.
@@ -138,7 +140,10 @@ WHERE [Id] = @id";
 
                 // Diagnostic: show token expiration & length (do not display token value)
                 var expText = tokenExpiration.HasValue ? tokenExpiration.Value.ToString("u") : "unknown";
-                MessageBox.Show($"Token expiration: {expText}\nToken length: {accessToken.Length} chars", "Token diagnostics", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // //MessageBox.Show($"Token expiration: {expText}\nToken length: {accessToken.Length} chars", "Token diagnostics", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                this.textBoxDiag.Text += "\r\n";
+                this.textBoxDiag.Text += $"Token expiration: {expText}\nToken length: {accessToken.Length} chars";
+
 
                 // Normalize authority and build baseUri
                 var authorityCandidate = authority.Trim();
@@ -250,6 +255,8 @@ WHERE [Id] = @id";
             {
                 GoButton.Enabled = true;
             }
+
+            this.textBoxDiag.Text += "\r\nDone.";
         }
 
         private static List<TsQuote> ParseTradeStationQuotes(string json)
