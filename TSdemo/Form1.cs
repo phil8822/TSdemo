@@ -18,7 +18,6 @@ namespace TSdemo
     public partial class Form1 : Form
     {
         private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(30) };
-        private TextBox? txtBoxDiag; // keep this field
 
         public Form1()
         {
@@ -30,25 +29,12 @@ namespace TSdemo
             FormClosed += Form1_FormClosed;
         }
 
-        // Thread-safe append helper (add inside Form1)
-        private void AppendDiag(string text)
-        {
-            if (txtBoxDiag == null || txtBoxDiag.IsDisposed) return;
-            if (txtBoxDiag.InvokeRequired)
-                txtBoxDiag.BeginInvoke(new Action(() => txtBoxDiag.AppendText(text)));
-            else
-                txtBoxDiag.AppendText(text);
-        }
-
         private void Form1_Shown(object? sender, EventArgs e)
         {
-            txtBoxDiag = FindControlRecursive(this, "txtBoxDiag") as TextBox;
-
-            if (txtBoxDiag != null)
+            // write a simple ready message into the designer textbox if present
+            if (this.textBoxDiag != null && !this.textBoxDiag.IsDisposed)
             {
-                AppendDiag("txtBoxDiag found and initialized\r\n");
-                AppendDiag("DiagnosticWriter removed; using AppendDiag helper\r\n");
-                txtBoxDiag.Text = "Ready.\r\n";
+                this.textBoxDiag.Text = "Ready.\r\n";
             }
         }
 
@@ -461,22 +447,5 @@ WHERE [Id] = @id";
             /* Call the base class for normal key processing */
             return base.ProcessCmdKey(ref msg, keyData);
         }
-
-        // Add this helper method inside the Form1 class (anywhere in the class body)
-        private static Control? FindControlRecursive(Control parent, string name)
-        {
-            foreach (Control child in parent.Controls)
-            {
-                if (child.Name == name)
-                    return child;
-                var found = FindControlRecursive(child, name);
-                if (found != null)
-                    return found;
-            }
-            return null;
-        }
-
     }  // end of class
-
-
 } // end of namespace
