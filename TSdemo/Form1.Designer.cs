@@ -33,6 +33,8 @@
             textBox2 = new TextBox();
             label1 = new Label();
             label2 = new Label();
+            textBoxDiag = new TextBox();
+            label3 = new Label();
             SuspendLayout();
             // 
             // GoButton
@@ -80,11 +82,31 @@
             label2.TabIndex = 4;
             label2.Text = "Parsed";
             // 
+            // textBoxDiag
+            // 
+            textBoxDiag.Location = new Point(1046, 463);
+            textBoxDiag.Multiline = true;
+            textBoxDiag.Name = "textBoxDiag";
+            textBoxDiag.ScrollBars = ScrollBars.Both;
+            textBoxDiag.Size = new Size(524, 386);
+            textBoxDiag.TabIndex = 5;
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(1046, 400);
+            label3.Name = "label3";
+            label3.Size = new Size(293, 32);
+            label3.TabIndex = 6;
+            label3.Text = "Diagnostics and messages";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(13F, 32F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1972, 1468);
+            Controls.Add(label3);
+            Controls.Add(textBoxDiag);
             Controls.Add(label2);
             Controls.Add(label1);
             Controls.Add(textBox2);
@@ -103,5 +125,7 @@
         private TextBox textBox2;
         private Label label1;
         private Label label2;
+        private TextBox textBoxDiag;
+        private Label label3;
     }
 }

@@ -18,12 +18,30 @@ namespace TSdemo
     public partial class Form1 : Form
     {
         private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(30) };
+        private DiagnosticWriter? _diag;
+        private TextBox? txtBoxDiag; // <-- Add this field
 
         public Form1()
         {
             InitializeComponent();
+
+            Shown += Form1_Shown;
+
             GoButton.Click += GoButton_Click;
             FormClosed += Form1_FormClosed;
+        }
+
+        private void Form1_Shown(object? sender, EventArgs e)
+        {
+            // ensure controls/handles are created and visible
+            txtBoxDiag = FindControlRecursive(this, "txtBoxDiag") as TextBox;
+            _diag = txtBoxDiag != null ? new DiagnosticWriter(txtBoxDiag) : null;
+
+            if (txtBoxDiag != null)
+                txtBoxDiag.AppendText("txtBoxDiag found and initialized\r\n");
+            _diag?.WriteLine("DiagnosticWriter created");
+
+            this.textBoxDiag.Text = "Ready.\r\n";
         }
 
         private void Form1_FormClosed(object? sender, FormClosedEventArgs e) => _http.Dispose();
@@ -500,6 +518,20 @@ WHERE [Id] = @id";
 
             /* Call the base class for normal key processing */
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        // Add this helper method inside the Form1 class (anywhere in the class body)
+        private static Control? FindControlRecursive(Control parent, string name)
+        {
+            foreach (Control child in parent.Controls)
+            {
+                if (child.Name == name)
+                    return child;
+                var found = FindControlRecursive(child, name);
+                if (found != null)
+                    return found;
+            }
+            return null;
         }
 
     }  // end of class
