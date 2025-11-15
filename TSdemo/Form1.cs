@@ -181,9 +181,12 @@ WHERE [Id] = @id";
                 string finalContent = "";
                 Uri finalUri = new Uri(baseUri, $"marketdata/quotes/{Uri.EscapeDataString(symbol)}");
 
+                // Use the dedicated client implementation (moved to TradeStationClient.cs)
+                var tsClient = new TradeStationClient(_http);
+
                 foreach (var candidateBase in baseCandidates)
                 {
-                    var (status, content, triedUri) = await TryGetQuoteContentAsync(candidateBase, symbol, accessToken);
+                    var (status, content, triedUri) = await tsClient.TryGetQuoteContentAsync(candidateBase, symbol, accessToken);
                     finalStatus = status;
                     finalContent = content;
                     finalUri = triedUri;
@@ -254,75 +257,6 @@ WHERE [Id] = @id";
                 GoButton.Enabled = true;
             }
         }
-
-        // Try a list of common endpoint patterns and return status/content/uri for the first success or last attempt.
-        private async Task<(HttpStatusCode status, string content, Uri triedUri)> TryGetQuoteContentAsync(Uri baseUri, string symbol, string accessToken)
-        {
-            var candidates = new[]
-            {
-                // align with TradeStation docs (v3 path), then fallbacks
-                $"v3/marketdata/quotes/{Uri.EscapeDataString(symbol)}",
-                $"v3/marketdata/quotes/{Uri.EscapeDataString(symbol)}?symbols={Uri.EscapeDataString(symbol)}",
-                $"marketdata/quotes/{Uri.EscapeDataString(symbol)}",
-                $"marketdata/quotes?symbols={Uri.EscapeDataString(symbol)}",
-                $"marketdata/quotes?symbol={Uri.EscapeDataString(symbol)}",
-                $"v2/marketdata/quotes/{Uri.EscapeDataString(symbol)}",
-                $"quotes/{Uri.EscapeDataString(symbol)}",
-                $"quotes?symbols={Uri.EscapeDataString(symbol)}"
-            };
-
-            string lastContent = "";
-            Uri lastUri = new Uri(baseUri, candidates[0]);
-
-            foreach (var rel in candidates)
-            {
-                var uri = new Uri(baseUri, rel);
-                lastUri = uri;
-
-                using var req = new HttpRequestMessage(HttpMethod.Get, uri);
-                // Use header exactly as docs show
-                req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-                HttpResponseMessage res;
-                try
-                {
-                    res = await _http.SendAsync(req).ConfigureAwait(false);
-                }
-                catch (HttpRequestException hre)
-                {
-                    lastContent = hre.Message;
-                    continue; // try next candidate
-                }
-
-                lastContent = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-                // If success return immediately
-                if (res.IsSuccessStatusCode)
-                {
-                    return (res.StatusCode, lastContent, uri);
-                }
-
-                // If 401 return immediately (no refresh here)
-                if (res.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    return (res.StatusCode, lastContent, uri);
-                }
-
-                // For 404 try next candidate
-                if (res.StatusCode == HttpStatusCode.NotFound)
-                {
-                    continue;
-                }
-
-                // For other client/server errors return the response (no further attempts)
-                return (res.StatusCode, lastContent, uri);
-            }
-
-            // none succeeded
-            return (HttpStatusCode.NotFound, lastContent, lastUri);
-        }
-
-        // ---- Parsing helpers (unchanged) ----
 
         private static List<TsQuote> ParseTradeStationQuotes(string json)
         {
